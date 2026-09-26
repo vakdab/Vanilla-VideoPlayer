@@ -390,6 +390,23 @@
         .hud-menu .playlist-thumb { width:100px; height:56px; }
         .hud-menu .playlist-sub { font-size:11px; }
 
+
+        /* Налаштування як окремий стартовий екран у стилі iOS VLC */
+        .settings-page { background:#000; }
+        .settings-header { height:92px; padding:0 28px; background:rgba(24,24,27,.96); border-bottom:1px solid #3a3a3c; }
+        .settings-header h1 { font-size:34px; font-weight:700; letter-spacing:-.7px; }
+        .settings-scroll { padding:24px 28px 112px; max-width:900px; margin:0 auto; }
+        .settings-scroll section { margin-bottom:30px; }
+        .settings-scroll .section-title { text-transform:uppercase; color:#98989f; font-size:14px; letter-spacing:1.3px; margin:0 0 9px 16px; }
+        .settings-scroll .settings-card, .settings-scroll .playlist-container { background:#1c1c1e; border-radius:17px; overflow:hidden; border:1px solid #2c2c2e; }
+        .settings-scroll .setting-row, .settings-scroll .action-btn { min-height:68px; border-bottom:1px solid #38383a; }
+        .settings-scroll .setting-row:last-child, .settings-scroll .action-btn:last-child { border-bottom:0; }
+        .settings-bottom-nav { position:fixed; left:0; right:0; bottom:0; z-index:55; height:78px; display:flex; justify-content:space-around; background:rgba(29,29,31,.97); border-top:1px solid #38383a; padding-bottom:env(safe-area-inset-bottom); }
+        .settings-bottom-nav button { border:0; background:none; color:#8e8e93; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-width:84px; font-size:11px; cursor:pointer; }
+        .settings-bottom-nav button.active { color:#0a84ff; }
+        .settings-bottom-nav svg { width:23px; height:23px; fill:currentColor; }
+        @media (max-width:600px) { .settings-scroll { padding:20px 16px 112px; } .settings-header { padding:0 20px; } .settings-header h1 { font-size:32px; } }
+
         /* ====== ЕКРАН БЛОКУВАННЯ ====== */
         .lock-overlay {
             position: absolute;
@@ -862,6 +879,13 @@
         </div>
     </div>
 
+
+        <nav class="settings-bottom-nav" aria-label="Основна навігація">
+            <button id="navPlayer"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Плеєр</span></button>
+            <button id="navPlaylist"><svg viewBox="0 0 24 24"><path d="M3 6h12v2H3V6zm0 5h12v2H3v-2zm0 5h8v2H3v-2zm14-4v8l6-4-6-4z"/></svg><span>Плейлист</span></button>
+            <button id="navSettings" class="active"><svg viewBox="0 0 24 24"><path d="M19.43 12.99c.04-.32.07-.64.07-.99s-.03-.67-.08-.99l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.99s.03.67.08.99l-2.11 1.66a.5.5 0 0 0-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.41 1.08.74 1.69.99l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.99l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.66zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/></svg><span>Налаштування</span></button>
+        </nav>
+
     <!-- =====================================================
          СТОРІНКА НАЛАШТУВАНЬ
          ===================================================== -->
@@ -1276,6 +1300,18 @@
             settingsPage.classList.remove('open');
         }
 
+        const navPlayer = document.getElementById('navPlayer');
+        const navPlaylist = document.getElementById('navPlaylist');
+        const navSettings = document.getElementById('navSettings');
+        function setNav(active) {
+            [navPlayer, navPlaylist, navSettings].forEach(button => button.classList.remove('active'));
+            active.classList.add('active');
+        }
+        navPlayer.addEventListener('click', () => { closeSettings(); closeHudMenu(); setNav(navPlayer); });
+        navPlaylist.addEventListener('click', () => { openHudMenu(); setNav(navPlaylist); });
+        navSettings.addEventListener('click', () => { openSettings(); setNav(navSettings); });
+
+
         settingsBackBtn.addEventListener('click', closeSettings);
 
         optionsBtn.addEventListener('click', (e) => {
@@ -1488,6 +1524,10 @@
                 playEpisode(currentEpisodeIndex + 1);
             }
         });
+
+        // Стартовий екран: налаштування відкриті одразу, без натискання шестерні.
+        openSettings();
+        setNav(navSettings);
     });
 </script>
 </body>
