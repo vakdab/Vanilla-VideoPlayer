@@ -15,7 +15,6 @@
             --btn-hover: rgba(255, 255, 255, 0.25);
             --accent-color: #ffffff;
             --item-bg: #1a1a1a;
-            --sheet-bg: #000000;
         }
 
         * {
@@ -31,29 +30,81 @@
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
         }
 
+        /* =====================================================
+           ФОНОВИЙ КАТАЛОГ (видно, коли плеєр згорнутий у міні-плеєр)
+           ===================================================== */
+        .site-backdrop {
+            position: fixed;
+            inset: 0;
+            background: #0f0f0f;
+            overflow-y: auto;
+            z-index: 1;
+            padding: 24px;
+        }
+
+        .site-backdrop.hidden { display: none; }
+
+        .site-header {
+            font-size: 24px;
+            font-weight: 800;
+            font-style: italic;
+            color: #f6ad55;
+            margin-bottom: 20px;
+        }
+        .site-header span { color: #fff; }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .catalog-card {
+            background: var(--item-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: background 0.2s;
+        }
+        .catalog-card:hover { background: #242424; }
+        .catalog-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+        .catalog-title { padding: 10px 12px; font-size: 14px; font-weight: 600; }
+
+        /* ====== ПЛЕЄР ====== */
         .player-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
+            position: fixed;
+            inset: 0;
             max-width: 1000px;
+            margin: 0 auto;
             background: #000;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            z-index: 10;
+            transition: none;
         }
 
         video {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            transition: transform 0.3s ease;
+            display: block;
         }
+
+        /* Кінематографічне освітлення */
+        .cinematic-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.4s;
+            background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+        }
+        body.cinematic .cinematic-overlay { opacity: 1; }
+        body.cinematic #videoPlayer { filter: brightness(0.96) contrast(1.06) saturate(1.05); }
 
         /* ====== ВЕРХНЯ ПАНЕЛЬ ====== */
         .top-bar {
@@ -93,7 +144,6 @@
             color: #fff;
             transition: background 0.2s;
         }
-
         .back-btn:active { background: rgba(255, 255, 255, 0.3); }
         .back-btn svg { width: 26px; height: 26px; fill: currentColor; margin-left: -2px; }
 
@@ -113,7 +163,6 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
             font-style: italic;
         }
-
         .logo-text span { color: #fff; }
 
         .season-info {
@@ -136,7 +185,6 @@
             z-index: 10;
             transition: opacity 0.3s;
         }
-
         .bottom-bar.hidden { opacity: 0; pointer-events: none; }
 
         .next-episode-card {
@@ -154,7 +202,6 @@
             border: 1px solid rgba(255,255,255,0.1);
             z-index: 15;
         }
-
         .next-episode-card:hover { background: rgba(255, 255, 255, 0.1); }
 
         .next-thumb {
@@ -181,11 +228,7 @@
             color: #fff;
         }
 
-        .next-episode-text {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
+        .next-episode-text { display: flex; flex-direction: column; gap: 2px; }
 
         .next-label {
             font-size: 11px;
@@ -194,11 +237,7 @@
             letter-spacing: 0.5px;
             font-weight: 700;
         }
-
-        .next-title {
-            font-size: 14px;
-            font-weight: 600;
-        }
+        .next-title { font-size: 14px; font-weight: 600; }
 
         .progress-block {
             background: rgba(0, 0, 0, 0.6);
@@ -224,6 +263,7 @@
             display: flex;
             align-items: center;
             cursor: pointer;
+            touch-action: none;
         }
 
         .progress-track {
@@ -232,7 +272,6 @@
             background: rgba(255, 255, 255, 0.25);
             border-radius: 4px;
             position: relative;
-            overflow: visible;
         }
 
         .progress-fill {
@@ -247,7 +286,7 @@
             position: absolute;
             right: -11px;
             top: 50%;
-            transform: translateY(-50%) scale(1);
+            transform: translateY(-50%);
             width: 22px;
             height: 22px;
             background: #fff;
@@ -275,7 +314,6 @@
             border-radius: 50%;
             transition: background 0.2s;
         }
-
         .control-btn:active { background: rgba(255, 255, 255, 0.1); }
         .control-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
@@ -301,51 +339,231 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-
         .play-pause-btn:active { background: var(--btn-hover); }
         .play-pause-btn svg { width: 30px; height: 30px; fill: currentColor; }
 
         .controls-right {
             display: flex;
             background: var(--btn-bg);
-            border-radius: 50%;
-            padding: 4px;
+            border-radius: 30px;
+            padding: 4px 8px;
+            gap: 5px;
         }
 
-        /* ====== БІЧНЕ МЕНЮ (Плейлист) ====== */
-        .side-menu {
+        /* ====== ЕКРАН БЛОКУВАННЯ ====== */
+        .lock-overlay {
             position: absolute;
-            top: 0;
-            right: 0;
-            width: 75%;
-            max-width: 400px;
-            height: 100%;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 40;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .lock-overlay.active { display: flex; }
+        .lock-icon-large { width: 80px; height: 80px; fill: #fff; opacity: 0.9; }
+
+        /* =====================================================
+           СТОРІНКА НАЛАШТУВАНЬ (на весь екран, виїжджає справа)
+           ===================================================== */
+        .settings-page {
+            position: fixed;
+            inset: 0;
+            max-width: 480px;
+            margin: 0 auto;
             background: var(--menu-bg);
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
+            z-index: 50;
             transform: translateX(100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
             box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-            overflow-y: auto;
         }
+        .settings-page.open { transform: translateX(0); }
 
-        .side-menu.open { transform: translateX(0); }
-
-        .menu-header {
-            font-size: 24px;
-            font-weight: 700;
-            padding: 25px 25px 15px 25px;
-            color: #fff;
+        .settings-header {
             display: flex;
             align-items: center;
             gap: 15px;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
         }
 
+        .settings-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .settings-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 20px 60px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .settings-card {
+            background: var(--item-bg);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 15px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            min-height: 60px;
+        }
+        .setting-row:last-child { border-bottom: none; }
+
+        .setting-row .opt-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .setting-row .opt-icon svg { width: 20px; height: 20px; fill: #fff; }
+
+        .setting-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .setting-label { font-size: 15px; font-weight: 600; }
+        .setting-sub { font-size: 12px; color: var(--text-secondary); }
+
+        /* Перемикач */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 26px;
+            transition: background 0.2s;
+        }
+        .slider::before {
+            content: "";
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .switch input:checked + .slider { background: #f6ad55; }
+        .switch input:checked + .slider::before { transform: translateX(20px); }
+
+        /* Чипи (швидкість, розмір, таймер) */
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 16px 16px 16px;
+        }
+        .chip {
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: var(--text-color);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .chip:hover { background: rgba(255,255,255,0.1); }
+        .chip.active {
+            background: #f6ad55;
+            border-color: #f6ad55;
+            color: #000;
+        }
+
+        /* Кнопки-дії */
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            padding: 15px 16px;
+            background: none;
+            border: none;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-color);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: left;
+        }
+        .action-btn:hover { background: rgba(255,255,255,0.06); }
+        .action-btn .opt-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .action-btn .opt-icon svg { width: 20px; height: 20px; fill: #fff; }
+        .action-btn .sub { display: block; font-size: 12px; color: var(--text-secondary); font-weight: 400; margin-top: 3px; }
+
+        /* Слайдер гучності */
+        .volume-row { padding: 15px 16px 20px 16px; }
+        .volume-row .vol-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
+        .volume-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.25);
+            outline: none;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+        }
+        .volume-slider::-moz-range-thumb {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; border: none; cursor: pointer;
+        }
+
+        /* Плейлист на сторінці налаштувань */
         .playlist-container {
             display: flex;
             flex-direction: column;
-            padding: 0 15px;
             gap: 10px;
         }
 
@@ -360,488 +578,402 @@
             gap: 15px;
             border: 1px solid transparent;
         }
-
-        .playlist-item:hover, .playlist-item:active { background: #2a2a2a; }
-        .playlist-item.active { border-color: rgba(255, 255, 255, 0.35); }
+        .playlist-item:hover { background: #242424; }
+        .playlist-item.active {
+            background: #2b2118;
+            border-color: #f6ad55;
+        }
 
         .playlist-thumb {
-            width: 80px;
-            height: 45px;
+            width: 120px;
+            height: 68px;
             border-radius: 8px;
             object-fit: cover;
             background: #333;
+            flex-shrink: 0;
         }
 
-        .playlist-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
-        .playlist-title { font-size: 16px; font-weight: 600; color: #fff; }
-        .playlist-check { color: var(--accent-color); display: none; width: 24px; height: 24px; }
-        .playlist-item.active .playlist-check { display: block; }
+        .playlist-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+        }
+        .playlist-title { font-size: 15px; font-weight: 600; }
+        .playlist-sub { font-size: 12px; color: var(--text-secondary); }
+        .playlist-now {
+            font-size: 11px;
+            color: #f6ad55;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-        /* ====== НИЖНЯ ШТОРКА НАЛАШТУВАНЬ (ПОРТРЕТ) ====== */
-        .options-sheet {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            max-height: 80%;
-            background: var(--sheet-bg);
-            border-radius: 20px 20px 0 0;
+        .playlist-check {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .playlist-item.active .playlist-check { color: #f6ad55; }
+        .playlist-check svg { width: 22px; height: 22px; fill: currentColor; }
+
+        /* =====================================================
+           МІНІ-ПЛЕЄР (картинка в картинці на сайті)
+           ===================================================== */
+        body.mini-mode .player-container {
+            inset: auto;
+            position: fixed;
+            width: 340px;
+            height: 191px;
+            right: 20px;
+            bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.15);
             z-index: 30;
-            display: flex;
-            flex-direction: column;
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.9);
-            overflow: hidden;
+            cursor: grab;
+        }
+        body.mini-mode .player-container:active { cursor: grabbing; }
+
+        body.mini-mode .top-bar { display: none; }
+        body.mini-mode .next-episode-card { display: none !important; }
+
+        body.mini-mode .bottom-bar {
+            padding: 8px 10px 10px 10px;
+            gap: 6px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
         }
 
-        .options-sheet.open { transform: translateY(0); }
+        body.mini-mode .progress-block { padding: 6px 8px 4px 8px; border-radius: 8px; }
+        body.mini-mode .time-info { display: none; }
+        body.mini-mode .progress-container { height: 16px; }
+        body.mini-mode .progress-track { height: 5px; }
+        body.mini-mode .progress-thumb { width: 12px; height: 12px; right: -6px; }
 
-        .sheet-handle {
-            width: 40px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-            margin: 12px auto 15px auto;
-            flex-shrink: 0;
-        }
+        body.mini-mode .controls { margin-top: 0; padding: 0; }
+        body.mini-mode .play-pause-btn { width: 36px; height: 36px; padding: 7px; }
+        body.mini-mode .play-pause-btn svg { width: 20px; height: 20px; }
+        body.mini-mode .control-btn { padding: 6px; }
+        body.mini-mode .control-btn svg { width: 18px; height: 18px; }
+        body.mini-mode .controls-left,
+        body.mini-mode .controls-right { padding: 2px 4px; border-radius: 20px; }
+        body.mini-mode #nextBtn, body.mini-mode #playlistBtn { display: none; }
 
-        .sheet-view {
-            display: none;
-            flex-direction: column;
-            padding: 0 0 20px 0;
-            overflow-y: auto;
-        }
-
-        .sheet-view.active { display: flex; }
-
-        .opt-item {
-            display: flex;
-            align-items: center;
-            padding: 18px 25px;
-            cursor: pointer;
-            transition: background 0.2s;
-            gap: 15px;
-        }
-
-        .opt-item:active { background: rgba(255, 255, 255, 0.1); }
-
-        .opt-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .opt-icon svg { width: 100%; height: 100%; fill: currentColor; }
-
-        .opt-label {
-            font-size: 16px;
-            font-weight: 600;
-            color: #fff;
-            flex-grow: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .opt-value {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-right: 10px;
-        }
-
-        .opt-chevron {
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-        }
-
-        .opt-chevron svg { width: 100%; height: 100%; fill: currentColor; }
-
-        /* Підменю (Швидкість, Розмір) */
-        .sub-view-header {
-            display: flex;
-            align-items: center;
-            padding: 0 25px 15px 25px;
-            font-size: 18px;
+        .mini-label {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            font-size: 11px;
             font-weight: 700;
             color: #fff;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 3px 8px;
+            border-radius: 10px;
+            z-index: 12;
+            display: none;
+            pointer-events: none;
         }
-        
-        .sub-view-header-back {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            padding: 5px;
-            margin-left: -5px;
-        }
+        body.mini-mode .mini-label { display: block; }
 
-        .sub-option {
-            padding: 15px 25px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sub-option:active { background: rgba(255, 255, 255, 0.1); }
-        .sub-option.active { color: var(--accent-color); font-weight: 700; }
-        .sub-option.active::after { content: '✓'; font-weight: bold; }
-
-        /* ====== ПЕРЕМИКАЧІ (TOGGLES) ====== */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 46px;
-            height: 26px;
-            flex-shrink: 0;
-        }
-
-        .switch input { opacity: 0; width: 0; height: 0; }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
+        /* Кнопка повернення до повного плеєра на фоновому сайті */
+        .reopen-bar {
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.2);
-            transition: .3s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #ffffff;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(20px);
-            background-color: #000;
-        }
-
-        /* ====== ЕКРАН БЛОКУВАННЯ ====== */
-        .lock-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 100;
+            padding: 12px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            z-index: 25;
             display: none;
             justify-content: center;
-            align-items: center;
+        }
+        body.mini-mode .reopen-bar { display: flex; }
+        .reopen-btn {
+            background: #f6ad55;
+            color: #000;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 10px 22px;
+            border-radius: 22px;
             cursor: pointer;
         }
 
-        .lock-overlay.active { display: flex; }
-
-        .lock-icon-large {
-            width: 80px;
-            height: 80px;
-            fill: #fff;
-            opacity: 0.5;
-            transition: opacity 0.2s;
-        }
-
-        .lock-overlay:hover .lock-icon-large { opacity: 1; }
-
-
-        /* =================================================================
-           АДАПТАЦІЯ ПІД ГОРИЗОНТАЛЬНУ ОРІЄНТАЦІЮ (LANDSCAPE)
-           ================================================================= */
-        @media (orientation: landscape) {
-            .options-sheet {
-                /* Робимо модальне вікно по центру */
-                width: 60%;
-                max-width: 550px;
-                max-height: 85vh;
-                left: 50%;
-                top: 50%;
-                bottom: auto;
-                right: auto;
-                border-radius: 20px;
-                /* Початковий стан для анімації */
-                transform: translate(-50%, -40%) scale(0.9);
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-                /* Додаємо фон, щоб відео не відволікало */
-                backdrop-filter: blur(15px);
-                -webkit-backdrop-filter: blur(15px);
-                background: rgba(0, 0, 0, 0.85);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .options-sheet.open {
-                /* Кінцевий стан для анімації */
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-                visibility: visible;
-            }
-
-            /* Прибираємо смужку-хендл, бо це вже не шторка знизу */
-            .sheet-handle {
-                display: none;
-            }
-
-            .sheet-view {
-                padding-top: 15px;
-            }
-
-            /* Зменшуємо відступи для економії місця */
-            .opt-item {
-                padding: 12px 25px;
-            }
-
-            .opt-label {
-                font-size: 15px;
-            }
-            
-            .sub-view-header {
-                padding-top: 10px;
+        @media (max-width: 500px) {
+            body.mini-mode .player-container {
+                width: 210px;
+                height: 118px;
+                right: 12px;
+                bottom: 12px;
             }
         }
-
     </style>
 </head>
 <body>
 
-<div class="player-container" id="playerContainer">
-    <video id="videoPlayer" src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" preload="metadata"></video>
-
-    <!-- ЕКРАН БЛОКУВАННЯ -->
-    <div class="lock-overlay" id="lockOverlay">
-        <svg class="lock-icon-large" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+    <!-- ====== ФОНОВИЙ КАТАЛОГ (плеєр згорнутий у міні-плеєр) ====== -->
+    <div class="site-backdrop hidden" id="siteBackdrop">
+        <div class="site-header">ВАН <span>ПІС</span></div>
+        <div class="catalog-grid" id="catalogGrid"></div>
     </div>
 
-    <!-- ВЕРХНЯ ПАНЕЛЬ -->
-    <div class="top-bar" id="topBar">
-        <button class="back-btn" onclick="history.back()">
-            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-        </button>
-        <div class="logo-container">
-            <div class="logo-text">ВАН <span>ПІС</span></div>
-            <div class="season-info" id="seasonInfo">Сезон 1 • Серія 1</div>
+    <div class="reopen-bar">
+        <button class="reopen-btn" id="reopenBtn">Відкрити плеєр</button>
+    </div>
+
+    <!-- ====== ПЛЕЄР ====== -->
+    <div class="player-container" id="playerContainer">
+        <video id="videoPlayer" src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" preload="metadata"></video>
+
+        <!-- Кінематографічне освітлення -->
+        <div class="cinematic-overlay"></div>
+
+        <!-- Екран блокування -->
+        <div class="lock-overlay" id="lockOverlay">
+            <svg class="lock-icon-large" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
         </div>
-    </div>
 
-    <!-- НИЖНЯ ПАНЕЛЬ -->
-    <div class="bottom-bar" id="bottomBar">
-        
-        <div class="next-episode-card" id="nextEpisodeCard">
-            <div style="position: relative;">
-                <img src="" alt="Next" class="next-thumb" id="nextThumb">
-                <div class="next-thumb-play">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <!-- Мітка міні-плеєра -->
+        <div class="mini-label" id="miniLabel">Зараз грає</div>
+
+        <!-- Верхня панель -->
+        <div class="top-bar" id="topBar">
+            <button class="back-btn" onclick="history.back()">
+                <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
+            <div class="logo-container">
+                <div class="logo-text">ВАН <span>ПІС</span></div>
+                <div class="season-info" id="seasonInfo">Сезон 1 • Серія 1</div>
+            </div>
+        </div>
+
+        <!-- Нижня панель -->
+        <div class="bottom-bar" id="bottomBar">
+            <div class="next-episode-card" id="nextEpisodeCard">
+                <div style="position: relative;">
+                    <img src="" alt="Next" class="next-thumb" id="nextThumb">
+                    <div class="next-thumb-play">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+                <div class="next-episode-text">
+                    <span class="next-label">НАСТУПНА СЕРІЯ</span>
+                    <span class="next-title" id="nextEpisodeTitle">Серія 2</span>
                 </div>
             </div>
-            <div class="next-episode-text">
-                <span class="next-label">НАСТУПНА СЕРІЯ</span>
-                <span class="next-title" id="nextEpisodeTitle">Серія 2</span>
-            </div>
-        </div>
 
-        <div class="progress-block">
-            <div class="time-info">
-                <span id="currentTime">00:00:00</span>
-                <span id="durationTime">00:00:00 - Залишилось 0 х.</span>
-            </div>
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-track">
-                    <div class="progress-fill" id="progressFill">
-                        <div class="progress-thumb"></div>
+            <div class="progress-block">
+                <div class="time-info">
+                    <span id="currentTime">00:00:00</span>
+                    <span id="durationTime">00:00:00 - Залишилось 0 х.</span>
+                </div>
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill">
+                            <div class="progress-thumb"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="controls">
-            <div class="controls-left">
-                <button class="control-btn" id="playlistBtn">
-                    <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            <div class="controls">
+                <div class="controls-left">
+                    <button class="control-btn" id="playlistBtn" title="Плейлист">
+                        <svg viewBox="0 0 24 24"><path d="M3 10h11v2H3v-2zm0-4h11v2H3V6zm0 8h7v2H3v-2zm13-1v8l6-4-6-4z"/></svg>
+                    </button>
+                    <button class="control-btn" id="nextBtn" title="Наступна серія">
+                        <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                    </button>
+                </div>
+                <button class="play-pause-btn" id="playPauseBtn">
+                    <svg id="playIcon" viewBox="0 0 24 24" style="display: none;"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="pauseIcon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                 </button>
-                <button class="control-btn" id="nextBtn">
-                    <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-                </button>
+                <div class="controls-right">
+                    <button class="control-btn" id="miniPlayerBtn" title="Згорнути в міні-плеєр">
+                        <svg viewBox="0 0 24 24"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg>
+                    </button>
+                    <button class="control-btn" id="optionsBtn" title="Налаштування">
+                        <svg viewBox="0 0 24 24"><path d="M19.43 12.99c.04-.32.07-.64.07-.99 0-.35-.03-.67-.07-.99l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.99 0 .34.03.67.07.99l-2.11 1.66c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.41 1.08.74 1.69.99l.38 2.66c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.26 1.17-.59 1.69-.99l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+                    </button>
+                </div>
             </div>
-            
-            <button class="play-pause-btn" id="playPauseBtn">
-                <svg id="playIcon" viewBox="0 0 24 24" style="display: none;"><path d="M8 5v14l11-7z"/></svg>
-                <svg id="pauseIcon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         СТОРІНКА НАЛАШТУВАНЬ
+         ===================================================== -->
+    <div class="settings-page" id="settingsPage">
+        <div class="settings-header">
+            <button class="back-btn" id="settingsBackBtn" style="position: static; transform: none;">
+                <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
             </button>
+            <h1>Налаштування</h1>
+        </div>
 
-            <div class="controls-right">
-                <button class="control-btn" id="optionsBtn">
-                    <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-                </button>
-            </div>
+        <div class="settings-scroll">
+
+            <!-- ПЛЕЙЛИСТ -->
+            <section>
+                <h2 class="section-title" id="playlistSection">Плейлист</h2>
+                <div class="playlist-container" id="playlistContainer"></div>
+            </section>
+
+            <!-- КАРТИНКА В КАРТИНЦІ -->
+            <section>
+                <h2 class="section-title">Картинка в картинці</h2>
+                <div class="settings-card">
+                    <button class="action-btn" id="miniModeBtn">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg></span>
+                        <span>Згорнути плеєр<span class="sub">Відео продовжить грати у міні-вікні, поки ви на сайті</span></span>
+                    </button>
+                    <button class="action-btn" id="nativePipBtn">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14z"/></svg></span>
+                        <span>Картинка в картинці браузера<span class="sub">Відео в окремому вікні поверх усіх програм</span></span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ВІДТВОРЕННЯ -->
+            <section>
+                <h2 class="section-title">Відтворення</h2>
+                <div class="settings-card">
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Швидкість відтворення</div>
+                            <div class="chip-row" id="speedChips" style="padding: 0;">
+                                <button class="chip" data-speed="0.5">0.5x</button>
+                                <button class="chip" data-speed="0.75">0.75x</button>
+                                <button class="chip active" data-speed="1">Нормальна</button>
+                                <button class="chip" data-speed="1.25">1.25x</button>
+                                <button class="chip" data-speed="1.5">1.5x</button>
+                                <button class="chip" data-speed="2">2x</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Розмір відео</div>
+                            <div class="chip-row" id="sizeChips" style="padding: 0;">
+                                <button class="chip active" data-size="default">За замовчуванням</button>
+                                <button class="chip" data-size="expand">Розширити</button>
+                                <button class="chip" data-size="fill">Заповнити</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Повторювати відео</div>
+                            <div class="setting-sub">Після завершення серія почнеться знову</div>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="loopToggle"><span class="slider round"></span></label>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Автоплей наступної серії</div>
+                            <div class="setting-sub">Наступна серія запуститься сама</div>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="autoplayToggle" checked><span class="slider round"></span></label>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M19.43 12.99c.04-.32.07-.64.07-.99 0-.35-.03-.67-.07-.99l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.99 0 .34.03.67.07.99l-2.11 1.66c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.41 1.08.74 1.69.99l.38 2.66c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.26 1.17-.59 1.69-.99l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Якість</div>
+                            <div class="setting-sub" id="qualityValue">Авто (1080p60)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ЗВУК -->
+            <section>
+                <h2 class="section-title">Звук</h2>
+                <div class="settings-card">
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Стабілізувати гучність</div>
+                            <div class="setting-sub">Згладжує різкі перепади звуку</div>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="volumeToggle"><span class="slider round"></span></label>
+                    </div>
+                    <div class="volume-row">
+                        <div class="vol-label">
+                            <span>Гучність</span>
+                            <span id="volumePercent">100%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="100" class="volume-slider" id="volumeSlider">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ЗОБРАЖЕННЯ -->
+            <section>
+                <h2 class="section-title">Зображення</h2>
+                <div class="settings-card">
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Кінематографічне освітлення</div>
+                            <div class="setting-sub">М'яка віньєтка та глибший контраст</div>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="cinematicToggle" checked><span class="slider round"></span></label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ТАЙМЕР СНУ -->
+            <section>
+                <h2 class="section-title">Таймер сну</h2>
+                <div class="settings-card">
+                    <div class="setting-row">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M12.5 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></span>
+                        <div class="setting-main">
+                            <div class="setting-label">Зупинити відтворення через</div>
+                            <div class="setting-sub" id="sleepTimerStatus">Вимкнено</div>
+                            <div class="chip-row" id="sleepChips" style="padding: 10px 0 0 0;">
+                                <button class="chip active" data-minutes="0">Вимк</button>
+                                <button class="chip" data-minutes="5">5 хв</button>
+                                <button class="chip" data-minutes="10">10 хв</button>
+                                <button class="chip" data-minutes="15">15 хв</button>
+                                <button class="chip" data-minutes="30">30 хв</button>
+                                <button class="chip" data-minutes="45">45 хв</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ІНШЕ -->
+            <section>
+                <h2 class="section-title">Інше</h2>
+                <div class="settings-card">
+                    <button class="action-btn" id="lockScreenBtn">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></span>
+                        <span>Заблокувати екран<span class="sub">Фіксує кнопки під час перегляду</span></span>
+                    </button>
+                    <button class="action-btn" id="helpBtn">
+                        <span class="opt-icon"><svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg></span>
+                        <span>Довідка й відгуки</span>
+                    </button>
+                </div>
+            </section>
         </div>
     </div>
-
-    <!-- БІЧНЕ МЕНЮ (Плейлист) -->
-    <div class="side-menu" id="sideMenu">
-        <div class="menu-header">Плейлист</div>
-        <div class="playlist-container" id="playlistContainer"></div>
-    </div>
-
-    <!-- НИЖНЯ ШТОРКА / МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ -->
-    <div class="options-sheet" id="optionsSheet">
-        <div class="sheet-handle"></div>
-
-        <!-- ГОЛОВНЕ МЕНЮ НАЛАШТУВАНЬ -->
-        <div class="sheet-view active" id="optionsMainView">
-            
-            <!-- Повторювати відео (Новий пункт) -->
-            <div class="opt-item" id="loopMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
-                </div>
-                <div class="opt-label">Повторювати відео</div>
-                <label class="switch">
-                    <input type="checkbox" id="loopToggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <!-- Кінематографічне освітлення (Новий пункт) -->
-            <div class="opt-item" id="cinematicMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M18 4v1h-2V4c0-.55-.45-1-1-1H9c-.55 0-1 .45-1 1v1H6V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v16c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h2v1c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1h2v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-1c-.55 0-1 .45-1 1zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/></svg>
-                </div>
-                <div class="opt-label">Кінематографічне освітлення</div>
-                <label class="switch">
-                    <input type="checkbox" id="cinematicToggle" checked>
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <!-- Стабілізувати гучність (Новий пункт) -->
-            <div class="opt-item" id="volumeMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                </div>
-                <div class="opt-label">Стабілізувати гучність</div>
-                <label class="switch">
-                    <input type="checkbox" id="volumeToggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <!-- Таймер сну (Новий пункт) -->
-            <div class="opt-item" id="sleepTimerMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-                </div>
-                <div class="opt-label">Таймер сну</div>
-                <div class="opt-value">Вимкнено</div>
-                <div class="opt-chevron"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></div>
-            </div>
-
-            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 10px 25px;"></div>
-
-            <!-- Якість -->
-            <div class="opt-item" id="qualityMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
-                </div>
-                <div class="opt-label">Якість</div>
-                <div class="opt-value" id="currentQualityValue">Авто (1080p60)</div>
-                <div class="opt-chevron"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></div>
-            </div>
-
-            <!-- Швидкість -->
-            <div class="opt-item" id="speedMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M10 8v8l5-4-5-4zm9 4c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7 7-3.13 7-7zm-7 9c-4.96 0-9-4.04-9-9s4.04-9 9-9 9 4.04 9 9-4.04 9-9 9z"/></svg>
-                </div>
-                <div class="opt-label">Швидкість відтворення</div>
-                <div class="opt-value" id="currentSpeedValue">Нормальна</div>
-                <div class="opt-chevron"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></div>
-            </div>
-
-            <!-- Розмір відео -->
-            <div class="opt-item" id="sizeMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v10H7V7z"/></svg>
-                </div>
-                <div class="opt-label">Розмір відео</div>
-                <div class="opt-value" id="currentSizeValue">За замовчуванням</div>
-                <div class="opt-chevron"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></div>
-            </div>
-
-            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 10px 25px;"></div>
-
-            <!-- Довідка й відгуки -->
-            <div class="opt-item" id="helpMenuItem">
-                <div class="opt-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-                </div>
-                <div class="opt-label">Довідка й відгуки</div>
-                <div class="opt-chevron"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></div>
-            </div>
-        </div>
-
-        <!-- ПІДМЕНЮ: ШВИДКІСТЬ -->
-        <div class="sheet-view" id="speedView">
-            <div class="sub-view-header">
-                <div class="sub-view-header-back" id="backFromSpeed">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-                </div>
-                Швидкість
-            </div>
-            <div class="sub-option" data-speed="0.5">0.5x</div>
-            <div class="sub-option" data-speed="0.75">0.75x</div>
-            <div class="sub-option active" data-speed="1">Нормальна (1x)</div>
-            <div class="sub-option" data-speed="1.25">1.25x</div>
-            <div class="sub-option" data-speed="1.5">1.5x</div>
-            <div class="sub-option" data-speed="2">2x</div>
-        </div>
-
-        <!-- ПІДМЕНЮ: РОЗМІР ВІДЕО -->
-        <div class="sheet-view" id="sizeView">
-            <div class="sub-view-header">
-                <div class="sub-view-header-back" id="backFromSize">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-                </div>
-                Розмір відео
-            </div>
-            <div class="sub-option active" data-size="default">За замовчуванням</div>
-            <div class="sub-option" data-size="expand">Розширити</div>
-            <div class="sub-option" data-size="fill">Заповнити</div>
-        </div>
-
-    </div>
-</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -849,53 +981,65 @@
         const playPauseBtn = document.getElementById('playPauseBtn');
         const playIcon = document.getElementById('playIcon');
         const pauseIcon = document.getElementById('pauseIcon');
-        
+
         const progressContainer = document.getElementById('progressContainer');
         const progressFill = document.getElementById('progressFill');
         const currentTimeEl = document.getElementById('currentTime');
         const durationTimeEl = document.getElementById('durationTime');
-        
+
         const topBar = document.getElementById('topBar');
         const bottomBar = document.getElementById('bottomBar');
-        const sideMenu = document.getElementById('sideMenu');
-        const optionsSheet = document.getElementById('optionsSheet');
-        
+        const playerContainer = document.getElementById('playerContainer');
+
+        const settingsPage = document.getElementById('settingsPage');
+        const siteBackdrop = document.getElementById('siteBackdrop');
+        const catalogGrid = document.getElementById('catalogGrid');
+        const lockOverlay = document.getElementById('lockOverlay');
+
         const playlistBtn = document.getElementById('playlistBtn');
         const optionsBtn = document.getElementById('optionsBtn');
-        
+        const miniPlayerBtn = document.getElementById('miniPlayerBtn');
+        const settingsBackBtn = document.getElementById('settingsBackBtn');
+        const miniModeBtn = document.getElementById('miniModeBtn');
+        const nativePipBtn = document.getElementById('nativePipBtn');
+        const reopenBtn = document.getElementById('reopenBtn');
+        const lockScreenBtn = document.getElementById('lockScreenBtn');
+        const helpBtn = document.getElementById('helpBtn');
+
         const playlistContainer = document.getElementById('playlistContainer');
         const seasonInfo = document.getElementById('seasonInfo');
         const nextEpisodeTitle = document.getElementById('nextEpisodeTitle');
         const nextThumb = document.getElementById('nextThumb');
         const nextEpisodeCard = document.getElementById('nextEpisodeCard');
 
-        // Елементи налаштувань
-        const speedMenuItem = document.getElementById('speedMenuItem');
-        const sizeMenuItem = document.getElementById('sizeMenuItem');
-        const currentSpeedValue = document.getElementById('currentSpeedValue');
-        const currentSizeValue = document.getElementById('currentSizeValue');
-        
-        const optionsMainView = document.getElementById('optionsMainView');
-        const speedView = document.getElementById('speedView');
-        const sizeView = document.getElementById('sizeView');
-        
-        const backFromSpeed = document.getElementById('backFromSpeed');
-        const backFromSize = document.getElementById('backFromSize');
-
-        // Елементи блокування
-        const lockOverlay = document.getElementById('lockOverlay');
-
-        // ====== НАЛАШТУВАННЯ ПЛЕЙЛИСТА ======
+        // ====== ПЛЕЙЛИСТ ======
+        const bucket = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
         const episodes = [
-            { id: 1, title: 'Серія 1', thumb: 'https://via.placeholder.com/160x90/1E1E1E/fff?text=Ep1' },
-            { id: 2, title: 'Серія 2', thumb: 'https://via.placeholder.com/160x90/1E1E1E/fff?text=Ep2' },
-            { id: 3, title: 'Серія 3', thumb: 'https://via.placeholder.com/160x90/1E1E1E/fff?text=Ep3' },
-            { id: 4, title: 'Серія 4', thumb: 'https://via.placeholder.com/160x90/1E1E1E/fff?text=Ep4' },
-            { id: 5, title: 'Серія 5', thumb: 'https://via.placeholder.com/160x90/1E1E1E/fff?text=Ep5' },
-            { id: 6, title: 'Серія 6', thumb: 'https://via.placeholder.com/160x90/1E1E1E/fff?text=Ep6' },
-            { id: 7, title: 'Серія 7', thumb: 'https://via.placeholder.com/160x90/1E1E1E/fff?text=Ep7' }
+            { id: 1, title: 'Серія 1', src: bucket + 'BigBuckBunny.mp4' },
+            { id: 2, title: 'Серія 2', src: bucket + 'ElephantsDream.mp4' },
+            { id: 3, title: 'Серія 3', src: bucket + 'ForBiggerBlazes.mp4' },
+            { id: 4, title: 'Серія 4', src: bucket + 'ForBiggerEscapes.mp4' },
+            { id: 5, title: 'Серія 5', src: bucket + 'ForBiggerFun.mp4' },
+            { id: 6, title: 'Серія 6', src: bucket + 'Sintel.mp4' },
+            { id: 7, title: 'Серія 7', src: bucket + 'TearsOfSteel.mp4' }
         ];
         let currentEpisodeIndex = 0;
+
+        // SVG-мініатюра без зовнішніх сервісів
+        function makeThumb(label) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="90"><rect width="160" height="90" fill="#1E1E1E"/><rect x="8" y="8" width="144" height="74" rx="6" fill="none" stroke="#f6ad55" stroke-width="2"/><text x="80" y="52" font-family="Arial" font-size="26" font-weight="bold" fill="#f6ad55" text-anchor="middle">${label}</text></svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+        episodes.forEach(ep => { ep.thumb = makeThumb(ep.title); });
+
+        function playEpisode(index) {
+            currentEpisodeIndex = index;
+            video.src = episodes[index].src;
+            video.load();
+            video.play();
+            updatePlayIcons();
+            updatePlayerUI();
+        }
 
         function renderPlaylist() {
             playlistContainer.innerHTML = '';
@@ -905,45 +1049,55 @@
                 item.innerHTML = `
                     <img src="${ep.thumb}" alt="${ep.title}" class="playlist-thumb">
                     <div class="playlist-info">
+                        ${index === currentEpisodeIndex ? '<span class="playlist-now">Зараз грає</span>' : ''}
                         <span class="playlist-title">${ep.title}</span>
+                        <span class="playlist-sub">Сезон 1 • 24 хв</span>
                     </div>
                     <div class="playlist-check">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                     </div>
                 `;
-                
                 item.addEventListener('click', () => {
-                    currentEpisodeIndex = index;
-                    updatePlayerUI();
-                    sideMenu.classList.remove('open');
-                    video.currentTime = 0;
-                    video.play();
-                    playIcon.style.display = 'none';
-                    pauseIcon.style.display = 'block';
+                    if (index !== currentEpisodeIndex) {
+                        playEpisode(index);
+                    }
+                    closeSettings();
                 });
-                
                 playlistContainer.appendChild(item);
+            });
+        }
+
+        function renderCatalog() {
+            catalogGrid.innerHTML = '';
+            episodes.forEach((ep, index) => {
+                const card = document.createElement('div');
+                card.className = 'catalog-card';
+                card.innerHTML = `<img class="catalog-thumb" src="${ep.thumb}" alt="${ep.title}"><div class="catalog-title">${ep.title}</div>`;
+                card.addEventListener('click', () => {
+                    exitMiniMode();
+                    playEpisode(index);
+                });
+                catalogGrid.appendChild(card);
             });
         }
 
         function updatePlayerUI() {
             const currentTitle = episodes[currentEpisodeIndex].title;
             seasonInfo.textContent = `Сезон 1 • ${currentTitle}`;
-            
+
             if (currentEpisodeIndex < episodes.length - 1) {
                 const nextEp = episodes[currentEpisodeIndex + 1];
                 nextEpisodeTitle.textContent = nextEp.title;
                 nextThumb.src = nextEp.thumb;
-                nextEpisodeCard.style.display = 'flex';
             } else {
-                nextEpisodeTitle.textContent = 'Кінець';
-                nextThumb.src = 'https://via.placeholder.com/60x34/333/fff?text=End';
-                nextEpisodeCard.style.display = 'flex';
+                nextEpisodeTitle.textContent = 'Кінець сезону';
+                nextThumb.src = makeThumb('Кінець');
             }
             renderPlaylist();
         }
 
         renderPlaylist();
+        renderCatalog();
         updatePlayerUI();
 
         // ====== ЛОГІКА ПЛЕЄРА ======
@@ -955,169 +1109,256 @@
             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
+        function updatePlayIcons() {
+            const playing = !video.paused && !video.ended;
+            playIcon.style.display = playing ? 'none' : 'block';
+            pauseIcon.style.display = playing ? 'block' : 'none';
+        }
+
         video.addEventListener('timeupdate', () => {
+            if (!video.duration) return;
             const percent = (video.currentTime / video.duration) * 100;
             progressFill.style.width = `${percent}%`;
             currentTimeEl.textContent = formatTime(video.currentTime);
-            
-            if (video.duration) {
-                const remaining = video.duration - video.currentTime;
-                durationTimeEl.textContent = `${formatTime(video.duration)} - Залишилось ${Math.ceil(remaining / 3600)} х.`;
-            }
+            const remaining = video.duration - video.currentTime;
+            durationTimeEl.textContent = `${formatTime(video.duration)} - Залишилось ${Math.max(1, Math.ceil(remaining / 3600))} х.`;
         });
 
         function togglePlay() {
-            if (video.paused) {
+            if (video.paused || video.ended) {
                 video.play();
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
             } else {
                 video.pause();
-                playIcon.style.display = 'block';
-                pauseIcon.style.display = 'none';
             }
+            updatePlayIcons();
         }
 
-        playPauseBtn.addEventListener('click', togglePlay);
-        video.addEventListener('click', togglePlay);
+        playPauseBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
 
-        progressContainer.addEventListener('click', (e) => {
-            const rect = progressContainer.getBoundingClientRect();
-            const pos = (e.clientX - rect.left) / rect.width;
-            video.currentTime = pos * video.duration;
-        });
+        video.addEventListener('play', updatePlayIcons);
+        video.addEventListener('pause', updatePlayIcons);
 
+        let didDrag = false;
         video.addEventListener('click', () => {
+            if (didDrag) { didDrag = false; return; } // ігноруємо клік після перетягування міні-плеєра
+            togglePlay();
             topBar.classList.toggle('hidden');
             bottomBar.classList.toggle('hidden');
-            sideMenu.classList.remove('open');
-            optionsSheet.classList.remove('open');
         });
 
-        // ====== ВІДКРИТТЯ МЕНЮ ======
-        playlistBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            optionsSheet.classList.remove('open');
-            sideMenu.classList.add('open');
+        // Прогрес: клік + перетягування
+        let seeking = false;
+        function seekTo(clientX) {
+            const rect = progressContainer.getBoundingClientRect();
+            const pos = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+            if (video.duration) video.currentTime = pos * video.duration;
+        }
+        progressContainer.addEventListener('pointerdown', (e) => {
+            seeking = true;
+            progressContainer.setPointerCapture(e.pointerId);
+            seekTo(e.clientX);
         });
+        progressContainer.addEventListener('pointermove', (e) => { if (seeking) seekTo(e.clientX); });
+        progressContainer.addEventListener('pointerup', () => { seeking = false; });
+
+        // ====== СТОРІНКА НАЛАШТУВАНЬ ======
+        function openSettings(scrollToPlaylist = false) {
+            settingsPage.classList.add('open');
+            settingsPage.querySelector('.settings-scroll').scrollTop = 0;
+            if (scrollToPlaylist) {
+                requestAnimationFrame(() => {
+                    document.getElementById('playlistSection').scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+        }
+        function closeSettings() {
+            settingsPage.classList.remove('open');
+        }
+
+        settingsBackBtn.addEventListener('click', closeSettings);
 
         optionsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            sideMenu.classList.remove('open');
-            optionsSheet.classList.add('open');
-            switchSheetView(optionsMainView);
+            openSettings(false);
         });
 
-        video.addEventListener('click', () => {
-            optionsSheet.classList.remove('open');
+        playlistBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openSettings(true);
         });
 
-        // ====== ЛОГІКА НИЖНЬОЇ ШТОРКИ ======
-        function switchSheetView(view) {
-            document.querySelectorAll('.sheet-view').forEach(v => v.classList.remove('active'));
-            view.classList.add('active');
+        // ====== МІНІ-ПЛЕЄР (вихід з плеєра, відео грає далі) ======
+        function enterMiniMode() {
+            document.body.classList.add('mini-mode');
+            siteBackdrop.classList.remove('hidden');
+            topBar.classList.remove('hidden');
+            bottomBar.classList.remove('hidden');
+            closeSettings();
+            if (video.paused) video.play().catch(() => {});
+            updatePlayIcons();
         }
 
-        // Навігація
-        speedMenuItem.addEventListener('click', () => {
-            switchSheetView(speedView);
-            document.querySelectorAll('#speedView .sub-option').forEach(opt => {
-                opt.classList.remove('active');
-                if (parseFloat(opt.getAttribute('data-speed')) === video.playbackRate) {
-                    opt.classList.add('active');
+        function exitMiniMode() {
+            document.body.classList.remove('mini-mode');
+            siteBackdrop.classList.add('hidden');
+            playerContainer.style.left = '';
+            playerContainer.style.top = '';
+            playerContainer.style.right = '';
+            playerContainer.style.bottom = '';
+            topBar.classList.remove('hidden');
+            bottomBar.classList.remove('hidden');
+        }
+
+        miniPlayerBtn.addEventListener('click', (e) => { e.stopPropagation(); enterMiniMode(); });
+        miniModeBtn.addEventListener('click', enterMiniMode);
+        reopenBtn.addEventListener('click', exitMiniMode);
+
+        // Перетягування міні-плеєра
+        let dragging = false, didMove = false, dragStartX = 0, dragStartY = 0, downX = 0, downY = 0;
+        playerContainer.addEventListener('pointerdown', (e) => {
+            if (!document.body.classList.contains('mini-mode')) return;
+            if (e.target.closest('.bottom-bar')) return;
+            dragging = true;
+            didMove = false;
+            downX = e.clientX; downY = e.clientY;
+            const rect = playerContainer.getBoundingClientRect();
+            dragStartX = e.clientX - rect.left;
+            dragStartY = e.clientY - rect.top;
+            playerContainer.setPointerCapture(e.pointerId);
+        });
+        playerContainer.addEventListener('pointermove', (e) => {
+            if (!dragging) return;
+            if (Math.abs(e.clientX - downX) > 5 || Math.abs(e.clientY - downY) > 5) didMove = true;
+            if (!didMove) return;
+            const w = playerContainer.offsetWidth, h = playerContainer.offsetHeight;
+            let x = e.clientX - dragStartX, y = e.clientY - dragStartY;
+            x = Math.min(Math.max(x, 4), window.innerWidth - w - 4);
+            y = Math.min(Math.max(y, 4), window.innerHeight - h - 4);
+            playerContainer.style.left = x + 'px';
+            playerContainer.style.top = y + 'px';
+            playerContainer.style.right = 'auto';
+            playerContainer.style.bottom = 'auto';
+        });
+        playerContainer.addEventListener('pointerup', () => {
+            if (dragging && didMove) { didDrag = true; setTimeout(() => didDrag = false, 50); }
+            dragging = false;
+        });
+
+        // ====== КАРТИНКА В КАРТИНЦІ (браузерна PiP) ======
+        nativePipBtn.addEventListener('click', async () => {
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    await video.requestPictureInPicture();
                 }
+            } catch (err) {
+                alert('Картинка в картинці недоступна в цьому браузері');
+            }
+        });
+
+        // ====== ШВИДКІСТЬ ======
+        document.querySelectorAll('#speedChips .chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                video.playbackRate = parseFloat(chip.getAttribute('data-speed'));
+                document.querySelectorAll('#speedChips .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
             });
         });
 
-        sizeMenuItem.addEventListener('click', () => {
-            switchSheetView(sizeView);
-        });
-
-        backFromSpeed.addEventListener('click', () => switchSheetView(optionsMainView));
-        backFromSize.addEventListener('click', () => switchSheetView(optionsMainView));
-
-        // Вибір швидкості
-        document.querySelectorAll('#speedView .sub-option').forEach(opt => {
-            opt.addEventListener('click', function() {
-                const speed = parseFloat(this.getAttribute('data-speed'));
-                video.playbackRate = speed;
-                currentSpeedValue.textContent = speed === 1 ? 'Нормальна' : `${speed}x`;
-                
-                document.querySelectorAll('#speedView .sub-option').forEach(o => o.classList.remove('active'));
-                this.classList.add('active');
-                switchSheetView(optionsMainView);
-            });
-        });
-
-        // Вибір розміру
-        document.querySelectorAll('#sizeView .sub-option').forEach(opt => {
-            opt.addEventListener('click', function() {
-                const sizeType = this.getAttribute('data-size');
-                currentSizeValue.textContent = this.textContent;
-                
-                video.style.transform = 'none';
+        // ====== РОЗМІР ВІДЕО ======
+        document.querySelectorAll('#sizeChips .chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const sizeType = chip.getAttribute('data-size');
                 if (sizeType === 'default') video.style.objectFit = 'contain';
                 if (sizeType === 'expand') video.style.objectFit = 'cover';
                 if (sizeType === 'fill') video.style.objectFit = 'fill';
-                
-                document.querySelectorAll('#sizeView .sub-option').forEach(o => o.classList.remove('active'));
-                this.classList.add('active');
-                switchSheetView(optionsMainView);
+                document.querySelectorAll('#sizeChips .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
             });
         });
 
-        // ====== ЯКІСТЬ (Імітація) ======
-        const qualityOptions = ['Авто (1080p60)', '1080p60', '720p', '480p', '360p'];
-        let qualityIndex = 0;
-        document.getElementById('qualityMenuItem').addEventListener('click', () => {
-            qualityIndex = (qualityIndex + 1) % qualityOptions.length;
-            document.getElementById('currentQualityValue').textContent = qualityOptions[qualityIndex];
-        });
-
-        // ====== ПЕРЕМИКАЧІ (ЛОГІКА) ======
-        const loopToggle = document.getElementById('loopToggle');
-        loopToggle.addEventListener('change', function() {
+        // ====== ПОВТОР ТА АВТОПЛЕЙ ======
+        document.getElementById('loopToggle').addEventListener('change', function () {
             video.loop = this.checked;
         });
 
-        const cinematicToggle = document.getElementById('cinematicToggle');
-        cinematicToggle.addEventListener('change', function() {
-            if (this.checked) {
-                video.style.filter = 'brightness(0.8) contrast(1.2)';
-            } else {
-                video.style.filter = 'none';
+        document.getElementById('autoplayToggle').addEventListener('change', function () {
+            video.dataset.autoplayNext = this.checked ? '1' : '';
+        });
+        video.dataset.autoplayNext = '1';
+
+        video.addEventListener('ended', () => {
+            if (video.loop) return;
+            if (video.dataset.autoplayNext === '1' && currentEpisodeIndex < episodes.length - 1) {
+                playEpisode(currentEpisodeIndex + 1);
             }
         });
-        // Ініціалізація ефекту при завантаженні
-        video.style.filter = cinematicToggle.checked ? 'brightness(0.8) contrast(1.2)' : 'none';
 
-        const volumeToggle = document.getElementById('volumeToggle');
-        volumeToggle.addEventListener('change', function() {
-            // Імітація стабілізації гучності
-            if (this.checked) {
+        // ====== ЗВУК ======
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumePercent = document.getElementById('volumePercent');
+        let volumeStabilized = false;
+
+        volumeSlider.addEventListener('input', () => {
+            video.volume = volumeSlider.value / 100;
+            volumePercent.textContent = volumeSlider.value + '%';
+        });
+
+        document.getElementById('volumeToggle').addEventListener('change', function () {
+            volumeStabilized = this.checked;
+            video.volume = volumeStabilized ? 0.8 : Math.min(1, video.volume);
+            // при стабілізації не даємо гучності перевищувати 80%
+            if (volumeStabilized && video.volume > 0.8) {
                 video.volume = 0.8;
-            } else {
-                video.volume = 1.0;
+                volumeSlider.value = 80;
+                volumePercent.textContent = '80%';
             }
         });
 
-        // ====== ТАЙМЕР СНУ (Заглушка) ======
-        document.getElementById('sleepTimerMenuItem').addEventListener('click', () => {
-            alert('Таймер сну: функція в розробці');
+        // ====== КІНЕМАТОГРАФІЧНЕ ОСВІТЛЕННЯ ======
+        document.getElementById('cinematicToggle').addEventListener('change', function () {
+            document.body.classList.toggle('cinematic', this.checked);
         });
+        document.body.classList.add('cinematic');
 
-        // ====== ДОВІДКА (Заглушка) ======
-        document.getElementById('helpMenuItem').addEventListener('click', () => {
-            alert('Довідка й відгуки: функція в розробці');
+        // ====== ТАЙМЕР СНУ ======
+        let sleepTimerInterval = null;
+        const sleepTimerStatus = document.getElementById('sleepTimerStatus');
+
+        function setSleepTimer(minutes) {
+            clearInterval(sleepTimerInterval);
+            if (!minutes) {
+                sleepTimerStatus.textContent = 'Вимкнено';
+                return;
+            }
+            let remaining = minutes * 60;
+            sleepTimerStatus.textContent = `Зупиниться через ${minutes} хв`;
+            sleepTimerInterval = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(sleepTimerInterval);
+                    video.pause();
+                    updatePlayIcons();
+                    sleepTimerStatus.textContent = 'Відео зупинено';
+                    document.querySelectorAll('#sleepChips .chip').forEach(c => c.classList.toggle('active', c.dataset.minutes === '0'));
+                } else {
+                    sleepTimerStatus.textContent = `Залишилось ${Math.ceil(remaining / 60)} хв`;
+                }
+            }, 1000);
+        }
+
+        document.querySelectorAll('#sleepChips .chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('#sleepChips .chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                setSleepTimer(parseInt(chip.getAttribute('data-minutes'), 10));
+            });
         });
 
         // ====== БЛОКУВАННЯ ЕКРАНУ ======
-        document.getElementById('lockScreenMenuItem').addEventListener('click', () => {
-            video.pause();
-            playIcon.style.display = 'block';
-            pauseIcon.style.display = 'none';
-            
-            optionsSheet.classList.remove('open');
+        lockScreenBtn.addEventListener('click', () => {
+            closeSettings();
             lockOverlay.classList.add('active');
         });
 
@@ -1125,28 +1366,25 @@
             lockOverlay.classList.remove('active');
         });
 
-        // ====== КНОПКА НАСТУПНОЇ СЕРІЇ ======
-        document.getElementById('nextBtn').addEventListener('click', () => {
+        // ====== ДОВІДКА ======
+        helpBtn.addEventListener('click', () => {
+            alert('Довідка й відгуки: функція в розробці');
+        });
+
+        // ====== НАСТУПНА СЕРІЯ ======
+        document.getElementById('nextBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
             if (currentEpisodeIndex < episodes.length - 1) {
-                currentEpisodeIndex++;
-                updatePlayerUI();
-                video.currentTime = 0;
-                video.play();
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
+                playEpisode(currentEpisodeIndex + 1);
             } else {
                 alert('Це остання серія!');
             }
         });
 
-        nextEpisodeCard.addEventListener('click', () => {
+        nextEpisodeCard.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (currentEpisodeIndex < episodes.length - 1) {
-                currentEpisodeIndex++;
-                updatePlayerUI();
-                video.currentTime = 0;
-                video.play();
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
+                playEpisode(currentEpisodeIndex + 1);
             }
         });
     });
